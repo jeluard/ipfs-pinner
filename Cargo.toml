@@ -1,0 +1,19 @@
+[package]
+name = "ipfs-pinner"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+base64 = "0.21.0"
+bytes = "1"
+hex = "0.4.3"
+http = "0.2"
+http-body = "0.4.5"
+http-body-util = { version = "0.1.0-rc.2" }
+hyper = { version = "1.0.0-rc.3", features = ["client", "http1", "server"] }
+parity-scale-codec = "3.5.0"
+sp-core = "20.0.0"
+sp-keyring = "23.0.0"
+subxt = "0.28.0"
+tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread", "sync"] }
+url = "2.3.1"

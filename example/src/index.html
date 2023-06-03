@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title></title>
+    <script type="module" src="https://unpkg.com/kubo-rpc-client/dist/index.min.js"></script>
+    <script src="https://unpkg.com/@polkadot/util/bundle-polkadot-util.js"></script>
+    <script src="https://unpkg.com/@polkadot/util-crypto/bundle-polkadot-util-crypto.js"></script>
+    <script src="https://unpkg.com/@polkadot/extension-dapp/bundle-polkadot-extension-dapp.js"></script>
+    <script>
+        const { stringToU8a, stringToHex } = polkadotUtil;
+        const { web3Accounts, web3Enable, web3FromAddress } = polkadotExtensionDapp;
+
+        function utf8ToB64(str) {
+          return window.btoa(unescape(encodeURIComponent(str)));
+        }
+
+        async function save({address}, file) {
+          const injector = await web3FromAddress(address);
+
+          const client = window.KuboRpcClient.create({ url: "http://127.0.0.1:5001/api/v0" });
+          const {path} = await client.add(file)
+          const { signature } = await injector.signer.signRaw({
+              address,
+              data: stringToHex(`<Bytes>${address}/${path}</Bytes>`),
+              type: 'bytes'
+          });
+          const clientProxy = window.KuboRpcClient.create({ url: "http://127.0.0.1:5002/api/v0" });
+          clientProxy.pin.add(path, { headers: {
+              authorization: `Bearer ${utf8ToB64(`${address}:${signature}`)}`
+          }});
+          return path;
+        }
+
+        function submitHandler(event) {
+          event.preventDefault();
+        }
+
+        async function changeHandler(event) {
+          const path = await save(accounts[0], event.target.files[0]);
+          document.getElementById("path").innerHTML = `Published at <a href='https://gateway.pinata.cloud/ipfs/${path}'>${path}</a>`;
+        }
+
+        web3Enable('ipfs-pinner')
+          .then(async () => {
+            accounts = await web3Accounts();
+          });
+    </script>
+  </head>
+  <body>
+    <form>
+      <input type='file' onChange="changeHandler(event)" />
+    </form>
+    <br />
+    <div id="path"></div>
+  </body>
+</html>
