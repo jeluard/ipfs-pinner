@@ -35,6 +35,31 @@ IPFS pinner only exports `api/v0/pin/*` endpoints. In particular, file upload sh
 
 An example of its usage can be found in the [example folder](example/)
 
+### Full deployment
+
+A full prod-like deployment would be:
+
+* `ipfs-pinner` open on internet (behind a regular HTTP proxy)
+* [kubo](https://github.com/ipfs/kubo) partially hidden (at least admin and pin methods); kubo is still used to add files
+
+## Architecture
+
+At high-level, the flow is:
+
+* listen for pin HTTP endpoints (same API as a regular IPFS node)
+* per pin call, extract a polkadot address and a signature from HTTP headers. Signature is address/CID
+* verify the signature is valid with regard to the address
+* verify the signed CID is the one being pinned
+* verify the address holds enough DOTs regarding all their pinned CIDs (not fully implemented yet)
+* if everything is true, proxy the call to the real IPFS node
+
+### DOS protection
+
+Disk space quotas per address pro-rata of the amount of tokens they hold are enforced.
+A background process then removes files associated with address that don’t have those funds anymore.
+
+Note that most of this logic hasn't been implemented yet.
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
